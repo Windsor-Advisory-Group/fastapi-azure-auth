@@ -3,7 +3,7 @@ title: Azure configuration
 sidebar_position: 1
 ---
 
-We'll need to create two application registrations for Azure AD authentication to cover both direct API
+We'll need to create two application registrations for Azure Entra ID authentication to cover both direct API
 use and usage from the OpenAPI (swagger) documentation.
 
 We'll start with the API.
@@ -29,7 +29,7 @@ Press **Register**
 ### Step 2 - Change token version to `v2`
 
 First we'll change the token version to version 2. In the left menu bar, click `Manifest` and find the line
-that says `accessTokenAcceptedVersion`. Change its value from `null` to `2`.
+that says `requestedAccessTokenVersion`. Change its value from `null` to `2`.
 
 Press **Save**
 
@@ -105,7 +105,7 @@ Press **Register**
 ### Step 2 - Change token version to `v2`
 
 Like last time, we'll change the token version to version 2. In the left menu bar, click `Manifest` and find the line
-that says `accessTokenAcceptedVersion`. Change its value from `null` to `2`.
+that says `requestedAccessTokenVersion`. Change its value from `null` to `2`.
 
 Press **Save**
 
