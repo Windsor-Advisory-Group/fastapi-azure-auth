@@ -1,8 +1,10 @@
-const lightCodeTheme = require('prism-react-renderer').themes.github
-const darkCodeTheme = require('prism-react-renderer').themes.dracula
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
 
-/** @type {import('@docusaurus/types').DocusaurusConfig} */
-module.exports = {
+const config: Config = {
+  future: {
+    experimental_faster: true,
+  },
   title: 'FastAPI-Azure-Auth',
   tagline: 'Easy and secure implementation of Azure Entra ID for your FastAPI APIs 🔒',
   url: 'https://your-docusaurus-test-site.com',
@@ -54,11 +56,7 @@ module.exports = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Intility AS. Built with Docusaurus.`,
     },
-    prism: {
-      theme: lightCodeTheme,
-      darkTheme: darkCodeTheme,
-    },
-  },
+  } satisfies Preset.ThemeConfig,
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -73,7 +71,7 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-      },
+      } satisfies Preset.Options,
     ],
   ],
   plugins: [
@@ -90,3 +88,5 @@ module.exports = {
   //   ],
   ]
 }
+
+export default config;
