@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional, Type
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Optional, Type, TypeVar
 
 import jwt
 from fastapi.exceptions import HTTPException
@@ -38,6 +38,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 log = logging.getLogger('fastapi_azure_auth')
 
+UserObject = TypeVar('UserObject', bound=User)
+
 
 class AzureAuthorizationCodeBearerBase(SecurityBase):
     def __init__(
@@ -57,7 +59,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         openid_config_url: Optional[str] = None,
         openapi_description: Optional[str] = None,
         scheme_name: str = "AzureAuthorizationCodeBearerBase",
-        user_object: Type[User] = User,
+        user_object: Type[UserObject] = User,
     ) -> None:
         """
         Initialize settings.
@@ -157,7 +159,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         self.model = self.oauth.model
         self.user_object = user_object
 
-    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes) -> Optional[User]:
+    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes):
         """
         Extends call to also validate the token.
         """
@@ -221,9 +223,6 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                     token = self.validate(access_token=access_token, iss=iss, key=key, options=options)
                     # Attach the user to the request. Can be accessed through `request.state.user`
                     user = self.user_object(
-                        **{**token, 'claims': token, 'access_token': access_token, 'is_guest': user_is_guest}
-                    )
-                    user: User = self.user_object(
                         **{**token, 'claims': token, 'access_token': access_token, 'is_guest': user_is_guest}
                     )
                     request.state.user = user
@@ -307,7 +306,7 @@ class SingleTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase)
         openapi_token_url: Optional[str] = None,
         openapi_description: Optional[str] = None,
         scheme_name: str = "AzureAD_PKCE_single_tenant",
-        user_object: Type[User] = User,
+        user_object: Type[UserObject] = User,
     ) -> None:
         """
         Initialize settings for a single tenant application.
@@ -378,7 +377,7 @@ class MultiTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
         openapi_token_url: Optional[str] = None,
         openapi_description: Optional[str] = None,
         scheme_name: str = "AzureAD_PKCE_multi_tenant",
-        user_object: Type[User] = User,
+        user_object: Type[UserObject] = User,
     ) -> None:
         """
         Initialize settings for a multi-tenant application.
@@ -456,7 +455,7 @@ class B2CMultiTenantAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
         openapi_token_url: Optional[str] = None,
         openapi_description: Optional[str] = None,
         scheme_name: str = "AzureAD_PKCE_B2C_multi_tenant",
-        user_object: Type[User] = User,
+        user_object: Type[UserObject] = User,
     ) -> None:
         """
         Initialize settings for a B2C multi-tenant application.
