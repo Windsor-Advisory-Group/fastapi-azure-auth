@@ -159,12 +159,8 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         self.model = self.oauth.model
         self.user_object = user_object
 
-    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes):
-        """
-        Extends call to also validate the token.
-        """
+    async def authenticate(self, access_token: str | None, request: HTTPConnection, security_scopes: SecurityScopes):
         try:
-            access_token = await self.extract_access_token(request)
             try:
                 if access_token is None:
                     raise InvalidRequest('No access token provided', request=request)
@@ -265,6 +261,16 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
             if not self.auto_error:
                 return None
             raise InvalidRequest(detail='Unable to validate token', request=request) from error
+
+    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes):
+        """
+        Extends call to also validate the token.
+        """
+        return await self.authenticate(
+            access_token=await self.extract_access_token(request),
+            request=request,
+            security_scopes=security_scopes,
+        )
 
     async def extract_access_token(self, request: HTTPConnection) -> Optional[str]:
         """
