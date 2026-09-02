@@ -11,6 +11,8 @@ permissions:
 jobs:
   codecov:
     runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -26,8 +28,9 @@ jobs:
       - name: Test with pytest
         run: uv run pytest --cov=fastapi_azure_auth tests/ --verbose --assert=plain --cov-report=xml
       - name: Upload coverage
+        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           files: ./coverage.xml
           fail_ci_if_error: true
