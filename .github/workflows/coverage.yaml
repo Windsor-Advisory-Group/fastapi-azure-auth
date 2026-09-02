@@ -27,6 +27,11 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - name: Test with pytest
         run: uv run pytest --cov=fastapi_azure_auth tests/ --verbose --assert=plain --cov-report=xml
+      - name: Post Coverage Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: ./coverage.xml
       - name: Upload coverage
         if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
