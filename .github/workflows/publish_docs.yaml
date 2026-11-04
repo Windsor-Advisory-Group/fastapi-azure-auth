@@ -5,26 +5,44 @@ on:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - '.github/workflows/publish_docs.yaml'
+      - "docs/**"
+      - ".github/workflows/publish_docs.yaml"
+
+permissions: {}
 
 jobs:
-  gh-release:
+  build:
+    # Installs and runs third-party npm code, so it gets no write token and no persisted git credentials.
     permissions:
-      contents: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v5 # v5
         with:
-          node-version: '22.2'
+          persist-credentials: false
+      - uses: actions/setup-node@v6 # v6
+        with:
+          node-version: "22.2"
       - name: Build
         run: |
           cd docs
-          npm install
+          npm ci --ignore-scripts
           npm run build
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/upload-pages-artifact@v4 # v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/build
+          path: ./docs/build
+
+  deploy:
+    # Runs no repository code or npm packages; its token can only deploy to GitHub Pages.
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
