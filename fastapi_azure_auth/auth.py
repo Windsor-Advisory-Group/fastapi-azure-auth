@@ -211,6 +211,11 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
             else:
                 iss = self.openid_config.issuer
 
+            # PyJWT skips issuer comparison when `issuer` is None, so fail closed on anything but a non-empty string
+            if self.validate_iss and (not isinstance(iss, str) or not iss):
+                log.warning('Unable to determine expected issuer for token, rejecting')
+                raise Unauthorized(detail='Token contains invalid claims', request=request)
+
             # Use the `kid` from the header to find a matching signing key to use
             try:
                 if key := self.openid_config.signing_keys.get(header.get('kid', '')):

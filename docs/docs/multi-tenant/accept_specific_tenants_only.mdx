@@ -87,6 +87,7 @@ if __name__ == '__main__':
 
 We're first creating an `async function`, which takes a `tid` as an argument, and returns the tenant ID's `iss` if it's a valid tenant.
 If it's not a valid tenant, it has to raise an `Unauthorized()` exception.
+The callable must never return `None` or an empty string; such a token is rejected with a 401.
 
 ## More sophisticated callable
 If you want to cache these results in memory, you can do so by creating a more sophisticated callable:
