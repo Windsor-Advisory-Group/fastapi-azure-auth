@@ -113,11 +113,11 @@ async def test_skip_iss_validation(mock_openid_and_keys):
 
 @pytest.mark.anyio
 async def test_normal_user_rejected(multi_tenant_app, mock_openid_and_keys):
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
-            '/ws/admin', headers={'Authorization': 'Bearer ' + build_access_token_normal_user()}
-        ):
-            pass
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect('/ws/admin', headers={'Authorization': 'Bearer ' + build_access_token_normal_user()}),
+    ):
+        pass
     assert error.value.reason == str({'error': 'insufficient_scope', 'message': 'User is not an AdminUser'})
     assert error.value.code == 1008
 
@@ -133,22 +133,22 @@ async def test_guest_user_rejected(multi_tenant_app, mock_openid_and_keys):
 
 @pytest.mark.anyio
 async def test_invalid_token_claims(multi_tenant_app, mock_openid_and_keys):
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
-            '/ws', headers={'Authorization': 'Bearer ' + build_access_token_invalid_claims()}
-        ):
-            pass
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect('/ws', headers={'Authorization': 'Bearer ' + build_access_token_invalid_claims()}),
+    ):
+        pass
     assert error.value.reason == str({'error': 'invalid_token', 'message': 'Token contains invalid claims'})
     assert error.value.code == 1008
 
 
 @pytest.mark.anyio
 async def test_no_valid_keys_for_token(multi_tenant_app, mock_openid_and_no_valid_keys):
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
-            '/ws', headers={'Authorization': 'Bearer ' + build_access_token_invalid_claims()}
-        ):
-            pass
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect('/ws', headers={'Authorization': 'Bearer ' + build_access_token_invalid_claims()}),
+    ):
+        pass
     assert error.value.reason == str(
         {'error': 'invalid_token', 'message': 'Unable to verify token, no signing keys found'}
     )
@@ -157,22 +157,26 @@ async def test_no_valid_keys_for_token(multi_tenant_app, mock_openid_and_no_vali
 
 @pytest.mark.anyio
 async def test_no_valid_scopes(multi_tenant_app, mock_openid_and_no_valid_keys):
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect(
             '/ws/scope', headers={'Authorization': 'Bearer ' + build_access_token_invalid_scopes()}
-        ):
-            pass
+        ),
+    ):
+        pass
     assert error.value.reason == str({'error': 'insufficient_scope', 'message': 'Required scope missing'})
     assert error.value.code == 1008
 
 
 @pytest.mark.anyio
 async def test_no_valid_invalid_formatted_scope(multi_tenant_app, mock_openid_and_no_valid_keys):
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect(
             '/ws/scope', headers={'Authorization': 'Bearer ' + build_access_token_invalid_scopes(scopes=None)}
-        ):
-            pass
+        ),
+    ):
+        pass
     assert error.value.reason == str(
         {'error': 'insufficient_scope', 'message': 'Token contains invalid formatted scopes'}
     )
@@ -211,15 +215,17 @@ async def test_malformed_token(multi_tenant_app, mock_openid_and_keys):
 @pytest.mark.anyio
 async def test_only_header(multi_tenant_app, mock_openid_and_keys):
     """Only header token, with a matching kid, so the rest of the logic will be called, but can't be validated"""
-    with pytest.raises(WebSocketDisconnect) as error:
-        with client.websocket_connect(
+    with (
+        pytest.raises(WebSocketDisconnect) as error,
+        client.websocket_connect(
             '/ws',
             headers={
                 'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6InJlYWwgdGh1bWJ'
                 'wcmludCIsInR5cCI6IkpXVCIsIng1dCI6ImFub3RoZXIgdGh1bWJwcmludCJ9'
             },  # {'kid': 'real thumbprint', 'x5t': 'another thumbprint'}
-        ):
-            pass
+        ),
+    ):
+        pass
     assert error.value.reason == str({'error': 'invalid_token', 'message': 'Invalid token format'})
     assert error.value.code == 1008
 

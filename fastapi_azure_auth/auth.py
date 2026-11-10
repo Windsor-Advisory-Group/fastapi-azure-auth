@@ -123,9 +123,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         # Validate settings, making sure there's no misconfigured dependencies out there
         if multi_tenant:
             if validate_iss and not callable(iss_callable):
-                raise RuntimeError(
-                    '`validate_iss` is enabled, so you must provide an `iss_callable`'
-                )
+                raise RuntimeError('`validate_iss` is enabled, so you must provide an `iss_callable`')
             elif iss_callable and 'tid' not in inspect.signature(iss_callable).parameters.keys():
                 raise RuntimeError('`iss_callable` must accept `tid` as an argument')
 
@@ -148,11 +146,11 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         self.token_url = openapi_token_url
         if not self.authorization_url:
             if multi_tenant:
-                self.authorization_url = (
-                    'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-                )
+                self.authorization_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
             else:
-                self.authorization_url = f'https://login.microsoftonline.com/{self.openid_config.tenant_id}/oauth2/v2.0/authorize'
+                self.authorization_url = (
+                    f'https://login.microsoftonline.com/{self.openid_config.tenant_id}/oauth2/v2.0/authorize'
+                )
         if not self.token_url:
             if multi_tenant:
                 self.token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
@@ -170,9 +168,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         self.model = self.oauth.model
         self.user_object: type[UserT] = user_object
 
-    async def __call__(
-        self, request: HTTPConnection, security_scopes: SecurityScopes
-    ) -> UserT | None:
+    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes) -> UserT | None:
         """
         Extends call to also validate the token.
         """
@@ -185,9 +181,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
                 header: dict[str, Any] = get_unverified_header(access_token)
                 claims: dict[str, Any] = get_unverified_claims(access_token)
             except Exception as error:
-                log.warning(
-                    'Malformed token received. %s. Error: %s', access_token, error, exc_info=True
-                )
+                log.warning('Malformed token received. %s. Error: %s', access_token, error, exc_info=True)
                 raise Unauthorized(
                     detail='Invalid token format',
                     client_id=self.app_client_id,
@@ -240,9 +234,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
                         'require': required_claims,
                     }
                     # Validate token
-                    token = self.validate(
-                        access_token=access_token, iss=iss, key=key, options=options
-                    )
+                    token = self.validate(access_token=access_token, iss=iss, key=key, options=options)
                     # Attach the user to the request. Can be accessed through `request.state.user`
                     user = self.user_object(
                         **{
@@ -262,9 +254,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
                 MissingRequiredClaimError,
             ) as error:
                 log.info('Token contains invalid claims. %s', error)
-                raise Unauthorized(
-                    detail='Token contains invalid claims', request=request
-                ) from error
+                raise Unauthorized(detail='Token contains invalid claims', request=request) from error
             except ExpiredSignatureError as error:
                 log.info('Token signature has expired. %s', error)
                 raise Unauthorized(detail='Token signature has expired', request=request) from error
@@ -276,9 +266,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
                 log.exception('Unable to process jwt token. Uncaught error: %s', error)
                 raise Unauthorized(detail='Unable to process token', request=request) from error
             log.warning('Unable to verify token. No signing keys found')
-            raise Unauthorized(
-                detail='Unable to verify token, no signing keys found', request=request
-            )
+            raise Unauthorized(detail='Unable to verify token, no signing keys found', request=request)
         except (
             InvalidAuthHttp,
             InvalidAuthWebSocket,
@@ -301,7 +289,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         """
         Extracts the access token from the request.
         """
-        return await self.oauth(request=request)  # type: ignore[arg-type]
+        return await self.oauth(request=request)
 
     def validate(
         self, access_token: str, key: 'AllowedPublicKeys', iss: str, options: dict[str, Any]
@@ -323,9 +311,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         )
 
 
-class SingleTenantAzureAuthorizationCodeBearer(
-    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
-):
+class SingleTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]):
     def __init__(
         self,
         app_client_id: str,
@@ -403,9 +389,7 @@ class SingleTenantAzureAuthorizationCodeBearer(
         self.scheme_name: str = scheme_name
 
 
-class MultiTenantAzureAuthorizationCodeBearer(
-    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
-):
+class MultiTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]):
     def __init__(
         self,
         app_client_id: str,
@@ -491,9 +475,7 @@ class MultiTenantAzureAuthorizationCodeBearer(
         self.scheme_name: str = scheme_name
 
 
-class B2CMultiTenantAuthorizationCodeBearer(
-    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
-):
+class B2CMultiTenantAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]):
     def __init__(
         self,
         app_client_id: str,

@@ -108,7 +108,7 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
     tenant_id=settings.TENANT_ID,
     scopes={
         f'api://{settings.APP_CLIENT_ID}/user_impersonation': 'user_impersonation',
-    }
+    },
 )
 ```
 
@@ -123,7 +123,7 @@ azure_scheme = MultiTenantAzureAuthorizationCodeBearer(
     scopes={
         f'api://{settings.APP_CLIENT_ID}/user_impersonation': 'user_impersonation',
     },
-    validate_iss=False
+    validate_iss=False,
 )
 ```
 
@@ -138,7 +138,9 @@ Add `azure_scheme` as a dependency for your views/routers, using either `Securit
 # file: main.py
 from demoproj.api.dependencies import azure_scheme
 
-app.include_router(api_router, prefix=settings.API_V1_STR, dependencies=[Security(azure_scheme, scopes=['user_impersonation'])])
+app.include_router(
+    api_router, prefix=settings.API_V1_STR, dependencies=[Security(azure_scheme, scopes=['user_impersonation'])]
+)
 ```
 
 #### 6. Load config on startup

@@ -16,14 +16,14 @@ from fastapi_azure_auth.user import User
 log = logging.getLogger(__name__)
 
 
-azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
+azure_scheme: SingleTenantAzureAuthorizationCodeBearer = SingleTenantAzureAuthorizationCodeBearer(
     app_client_id=settings.APP_CLIENT_ID,
     scopes={f'api://{settings.APP_CLIENT_ID}/user_impersonation': '**No client secret needed, leave blank**'},
     tenant_id=settings.TENANT_ID,
 )
 
 
-async def validate_is_admin_user(user: User = Depends(azure_scheme)) -> None:
+async def validate_is_admin_user(user: User = Depends(azure_scheme)) -> None:  # noqa: B008
     """
     Validate that a user is in the `AdminUser` role in order to access the API.
     Raises a 401 authentication error if not.
@@ -62,7 +62,7 @@ class IssuerFetcher:
 
 issuer_fetcher = IssuerFetcher()
 
-azure_scheme_auto_error_false = MultiTenantAzureAuthorizationCodeBearer(
+azure_scheme_auto_error_false: MultiTenantAzureAuthorizationCodeBearer = MultiTenantAzureAuthorizationCodeBearer(
     app_client_id=settings.APP_CLIENT_ID,
     scopes={
         f'api://{settings.APP_CLIENT_ID}/user_impersonation': 'User impersonation',
@@ -72,7 +72,7 @@ azure_scheme_auto_error_false = MultiTenantAzureAuthorizationCodeBearer(
     auto_error=False,
 )
 
-azure_scheme_auto_error_false_b2c = B2CMultiTenantAuthorizationCodeBearer(
+azure_scheme_auto_error_false_b2c: B2CMultiTenantAuthorizationCodeBearer = B2CMultiTenantAuthorizationCodeBearer(
     app_client_id=settings.APP_CLIENT_ID,
     openapi_authorization_url=str(settings.AUTH_URL),
     openapi_token_url=str(settings.TOKEN_URL),
@@ -90,7 +90,7 @@ api_key_auth_auto_error_false = APIKeyHeader(name='TEST-API-KEY', auto_error=Fal
 
 
 async def multi_auth(
-    azure_auth: User | None = Depends(azure_scheme_auto_error_false),
+    azure_auth: User | None = Depends(azure_scheme_auto_error_false),  # noqa: B008
     api_key: str | None = Depends(api_key_auth_auto_error_false),
 ) -> User | str:
     """
@@ -104,7 +104,7 @@ async def multi_auth(
 
 
 async def multi_auth_b2c(
-    azure_auth: User | None = Depends(azure_scheme_auto_error_false_b2c),
+    azure_auth: User | None = Depends(azure_scheme_auto_error_false_b2c),  # noqa: B008
     api_key: str | None = Depends(api_key_auth_auto_error_false),
 ) -> User | str:
     """
