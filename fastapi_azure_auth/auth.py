@@ -1,7 +1,7 @@
 import inspect
 import logging
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import jwt
 from fastapi.exceptions import HTTPException
@@ -39,10 +39,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 log = logging.getLogger('fastapi_azure_auth')
 
-UserObject = TypeVar('UserObject', bound=User)
+UserT = TypeVar('UserT', bound=User)
 
 
-class AzureAuthorizationCodeBearerBase(SecurityBase):
+class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
     def __init__(
         self,
         app_client_id: str,
@@ -61,7 +61,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         openapi_description: str | None = None,
         scheme_name: str = 'AzureAuthorizationCodeBearerBase',
         http_client_config: HttpClientConfig | None = None,
-        user_object: type[UserObject] = User,
+        user_object: type[UserT] = User,  # type: ignore[assignment]
     ) -> None:
         """
         Initialize settings.
@@ -123,7 +123,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         # Validate settings, making sure there's no misconfigured dependencies out there
         if multi_tenant:
             if validate_iss and not callable(iss_callable):
-                raise RuntimeError('`validate_iss` is enabled, so you must provide an `iss_callable`')
+                raise RuntimeError(
+                    '`validate_iss` is enabled, so you must provide an `iss_callable`'
+                )
             elif iss_callable and 'tid' not in inspect.signature(iss_callable).parameters.keys():
                 raise RuntimeError('`iss_callable` must accept `tid` as an argument')
 
@@ -146,11 +148,11 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         self.token_url = openapi_token_url
         if not self.authorization_url:
             if multi_tenant:
-                self.authorization_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-            else:
                 self.authorization_url = (
-                    f'https://login.microsoftonline.com/{self.openid_config.tenant_id}/oauth2/v2.0/authorize'
+                    'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
                 )
+            else:
+                self.authorization_url = f'https://login.microsoftonline.com/{self.openid_config.tenant_id}/oauth2/v2.0/authorize'
         if not self.token_url:
             if multi_tenant:
                 self.token_url = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
@@ -166,9 +168,11 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
             auto_error=True,  # We catch this exception in __call__
         )
         self.model = self.oauth.model
-        self.user_object = user_object
+        self.user_object: type[UserT] = user_object
 
-    async def __call__(self, request: HTTPConnection, security_scopes: SecurityScopes) -> User | None:
+    async def __call__(
+        self, request: HTTPConnection, security_scopes: SecurityScopes
+    ) -> UserT | None:
         """
         Extends call to also validate the token.
         """
@@ -181,7 +185,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                 header: dict[str, Any] = get_unverified_header(access_token)
                 claims: dict[str, Any] = get_unverified_claims(access_token)
             except Exception as error:
-                log.warning('Malformed token received. %s. Error: %s', access_token, error, exc_info=True)
+                log.warning(
+                    'Malformed token received. %s. Error: %s', access_token, error, exc_info=True
+                )
                 raise Unauthorized(
                     detail='Invalid token format',
                     client_id=self.app_client_id,
@@ -234,10 +240,17 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                         'require': required_claims,
                     }
                     # Validate token
-                    token = self.validate(access_token=access_token, iss=iss, key=key, options=options)
+                    token = self.validate(
+                        access_token=access_token, iss=iss, key=key, options=options
+                    )
                     # Attach the user to the request. Can be accessed through `request.state.user`
                     user = self.user_object(
-                        **{**token, 'claims': token, 'access_token': access_token, 'is_guest': user_is_guest}
+                        **{
+                            **token,
+                            'claims': token,
+                            'access_token': access_token,
+                            'is_guest': user_is_guest,
+                        }
                     )
                     request.state.user = user
                     return user
@@ -249,7 +262,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                 MissingRequiredClaimError,
             ) as error:
                 log.info('Token contains invalid claims. %s', error)
-                raise Unauthorized(detail='Token contains invalid claims', request=request) from error
+                raise Unauthorized(
+                    detail='Token contains invalid claims', request=request
+                ) from error
             except ExpiredSignatureError as error:
                 log.info('Token signature has expired. %s', error)
                 raise Unauthorized(detail='Token signature has expired', request=request) from error
@@ -261,7 +276,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                 log.exception('Unable to process jwt token. Uncaught error: %s', error)
                 raise Unauthorized(detail='Unable to process token', request=request) from error
             log.warning('Unable to verify token. No signing keys found')
-            raise Unauthorized(detail='Unable to verify token, no signing keys found', request=request)
+            raise Unauthorized(
+                detail='Unable to verify token, no signing keys found', request=request
+            )
         except (
             InvalidAuthHttp,
             InvalidAuthWebSocket,
@@ -306,7 +323,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
         )
 
 
-class SingleTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
+class SingleTenantAzureAuthorizationCodeBearer(
+    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
+):
     def __init__(
         self,
         app_client_id: str,
@@ -321,7 +340,7 @@ class SingleTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase)
         openapi_description: str | None = None,
         scheme_name: str = 'AzureAD_PKCE_single_tenant',
         http_client_config: HttpClientConfig | None = None,
-        user_object: type[UserObject] = User,
+        user_object: type[UserT] = User,  # type: ignore[assignment]
     ) -> None:
         """
         Initialize settings for a single tenant application.
@@ -384,7 +403,9 @@ class SingleTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase)
         self.scheme_name: str = scheme_name
 
 
-class MultiTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
+class MultiTenantAzureAuthorizationCodeBearer(
+    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
+):
     def __init__(
         self,
         app_client_id: str,
@@ -400,7 +421,7 @@ class MultiTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
         openapi_description: str | None = None,
         scheme_name: str = 'AzureAD_PKCE_multi_tenant',
         http_client_config: HttpClientConfig | None = None,
-        user_object: type[UserObject] = User,
+        user_object: type[UserT] = User,  # type: ignore[assignment]
     ) -> None:
         """
         Initialize settings for a multi-tenant application.
@@ -470,7 +491,9 @@ class MultiTenantAzureAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
         self.scheme_name: str = scheme_name
 
 
-class B2CMultiTenantAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
+class B2CMultiTenantAuthorizationCodeBearer(
+    AzureAuthorizationCodeBearerBase[UserT], Generic[UserT]
+):
     def __init__(
         self,
         app_client_id: str,
@@ -486,7 +509,7 @@ class B2CMultiTenantAuthorizationCodeBearer(AzureAuthorizationCodeBearerBase):
         openapi_description: str | None = None,
         scheme_name: str = 'AzureAD_PKCE_B2C_multi_tenant',
         http_client_config: HttpClientConfig | None = None,
-        user_object: type[UserObject] = User,
+        user_object: type[UserT] = User,  # type: ignore[assignment]
     ) -> None:
         """
         Initialize settings for a B2C multi-tenant application.
