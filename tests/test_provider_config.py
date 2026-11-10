@@ -35,13 +35,15 @@ async def test_http_error_no_config_cause_crash_on_startup(httpx2_mock):
         status_code=500
     )
     with pytest.raises(RuntimeError):
-        async with LifespanManager(app=app):
-            async with AsyncClient(
+        async with (
+            LifespanManager(app=app),
+            AsyncClient(
                 transport=ASGITransport(app=app),
                 base_url='http://test',
                 headers={'Authorization': f'Bearer {build_access_token()}'},
-            ) as ac:
-                await ac.get('api/v1/hello')
+            ) as ac,
+        ):
+            await ac.get('api/v1/hello')
 
 
 @pytest.mark.anyio

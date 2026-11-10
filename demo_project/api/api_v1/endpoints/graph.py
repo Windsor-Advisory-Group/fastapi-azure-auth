@@ -18,7 +18,7 @@ router = APIRouter()
     operation_id='helloGraph',
     dependencies=[Depends(azure_scheme)],
 )
-async def graph_world(request: Request) -> Any:  # noqa: ANN401
+async def graph_world(request: Request) -> Any:
     """
     An example on how to use "on behalf of"-flow to fetch a graph token and then fetch data from graph.
     """

@@ -304,7 +304,7 @@ class AzureAuthorizationCodeBearerBase(SecurityBase, Generic[UserT]):
         """
         Extracts the access token from the request.
         """
-        return await self.oauth(request=request)  # type: ignore[arg-type]
+        return await self.oauth(request=request)
 
     def validate(
         self, access_token: str, key: 'AllowedPublicKeys', iss: str, options: dict[str, Any]
