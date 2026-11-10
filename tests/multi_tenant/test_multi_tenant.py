@@ -153,6 +153,22 @@ async def test_iss_callable_raise_error(mock_openid_and_keys):
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize('bad_issuer', [None, ''])
+async def test_iss_callable_returns_no_issuer_is_rejected(mock_openid_and_keys, bad_issuer):
+    async def issuer_fetcher(tid):
+        return bad_issuer
+
+    app.dependency_overrides[azure_scheme] = generate_azure_scheme_multi_tenant_object(issuer_fetcher)
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url='http://test',
+        headers={'Authorization': 'Bearer ' + build_access_token()},
+    ) as ac:
+        response = await ac.get('api/v1/hello')
+    assert response.status_code == 401, response.json()
+
+
+@pytest.mark.anyio
 async def test_skip_iss_validation(mock_openid_and_keys):
     azure_scheme_overrides = MultiTenantAzureAuthorizationCodeBearer(
         app_client_id=settings.APP_CLIENT_ID,

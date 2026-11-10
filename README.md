@@ -9,7 +9,7 @@
 <p align="center">
     <!-- Line 1 -->
     <a href="https://python.org">
-        <img src="https://img.shields.io/badge/python-v3.11+-blue.svg?logo=python&logoColor=white&label=python" alt="Python version">
+        <img src="https://img.shields.io/badge/python-v3.13+-blue.svg?logo=python&logoColor=white&label=python" alt="Python version">
     </a>
     <a href="https://fastapi.tiangolo.com/">
         <img src="https://img.shields.io/badge/FastAPI-0.111.1+%20-blue.svg?logo=fastapi&logoColor=white&label=fastapi" alt="FastAPI Version">
@@ -44,14 +44,13 @@
     </a>
 </p>
 
-
 ## 🚀 Description
 
 > FastAPI is a modern, fast (high-performance), web framework for building APIs with Python, based on standard Python type hints.
 
 This package enables our developers (and you 😊) to create features without worrying about authentication and authorization.
 
-Made by the people behind [Vibber](https://vibber.ai). Vibber is the control plane for enterprise AI. The single place to build, run and manage MCP servers. Production-ready in *minutes*, not months. Contact: `jonas+github@vibber.ai`
+Made by the people behind [Vibber](https://vibber.ai). Vibber is the control plane for enterprise AI. The single place to build, run and manage MCP servers. Production-ready in _minutes_, not months. Contact: `jonas+github@vibber.ai`
 
 ## 📚 Resources
 
@@ -64,20 +63,20 @@ application exactly how it's described there, and then alter it to your needs la
 | [**Documentation**](https://vibber-ai.github.io/fastapi-azure-auth/)
 | [**GitHub**](https://github.com/snok/django-guid)
 
-
 ## ⚡ Setup
 
 This is a tl;dr intended to give you an idea of what this package does and how to use it.
 For a more in-depth tutorial and settings reference you should read the
 [documentation](https://vibber-ai.github.io/fastapi-azure-auth/).
 
-
 #### 1. Install this library:
+
 ```bash
 uv add fastapi-azure-auth
 ```
 
 #### 2. Configure your FastAPI app
+
 Include `swagger_ui_oauth2_redirect_url` and `swagger_ui_init_oauth` in your FastAPI app initialization:
 
 ```python
@@ -93,11 +92,12 @@ app = FastAPI(
 ```
 
 #### 3. Setup CORS
+
 Ensure you have CORS enabled for your local environment, such as `http://localhost:8000`.
 
 #### 4. Configure FastAPI-Azure-Auth
-Configure either [`SingleTenantAzureAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/single_tenant), [`MultiTenantAzureAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/multi_tenant) or [`B2CMultiTenantAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/b2c)
 
+Configure either [`SingleTenantAzureAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/single_tenant), [`MultiTenantAzureAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/multi_tenant) or [`B2CMultiTenantAuthorizationCodeBearer`](https://vibber-ai.github.io/fastapi-azure-auth/settings/b2c)
 
 ```python
 # file: demoproj/api/dependencies.py
@@ -111,7 +111,9 @@ azure_scheme = SingleTenantAzureAuthorizationCodeBearer(
     }
 )
 ```
+
 or for multi-tenant applications:
+
 ```python
 # file: demoproj/api/dependencies.py
 from fastapi_azure_auth.auth import MultiTenantAzureAuthorizationCodeBearer
@@ -124,12 +126,14 @@ azure_scheme = MultiTenantAzureAuthorizationCodeBearer(
     validate_iss=False
 )
 ```
+
 To validate the `iss`, configure an
 [`iss_callable`](https://vibber-ai.github.io/fastapi-azure-auth/multi-tenant/accept_specific_tenants_only).
 
 #### 5. Configure dependencies
 
 Add `azure_scheme` as a dependency for your views/routers, using either `Security()` or `Depends()`.
+
 ```python
 # file: main.py
 from demoproj.api.dependencies import azure_scheme
@@ -151,8 +155,8 @@ async def load_config() -> None:
     await azure_scheme.openid_config.load_config()
 ```
 
-
 ## 📄 Example OpenAPI documentation
+
 Your OpenAPI documentation will get an `Authorize` button, which can be used to authenticate.
 ![authorize](docs/static/img/single-and-multi-tenant/fastapi_1_authorize_button.png)
 
