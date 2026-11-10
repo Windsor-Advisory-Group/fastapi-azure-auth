@@ -175,7 +175,9 @@ class AzureAuthorizationCodeBearerBase(SecurityBase):
                 header: dict[str, Any] = get_unverified_header(access_token)
                 claims: dict[str, Any] = get_unverified_claims(access_token)
             except Exception as error:
-                log.warning('Malformed token received (length %d). Error: %s', len(access_token or ''), error, exc_info=True)
+                log.warning(
+                    'Malformed token received (length %d). Error: %s', len(access_token or ''), error, exc_info=True
+                )
                 raise Unauthorized(
                     detail='Invalid token format',
                     client_id=self.app_client_id,
